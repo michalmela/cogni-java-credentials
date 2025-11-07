@@ -22,4 +22,4 @@
  :mvn/repos {"clojars" {:url "https://repo.clojars.org/"}}
  :mvn/group-id "io.github.michalmela"
  :mvn/artifact-id "cogni-java-credentials"
- :mvn/version "0.0.0"}
+ :mvn/version "1.0.0"}
