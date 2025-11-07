@@ -1,0 +1,13 @@
+#kaocha/v1
+ {:plugins [:kaocha.plugin.alpha/info
+            :profiling
+            :print-invocations
+            :hooks
+            :notifier]
+  :tests [{:id :unit :test-paths ["test"]}
+          {:id :integration-test :test-paths ["integration-test"]}]
+  :kaocha.hooks/pre-load [kaocha.assertions/load-assertions]
+  :kaocha/bindings {kaocha.stacktrace/*stacktrace-filters* []
+                    kaocha.stacktrace/*stacktrace-stop-list* []}
+  :reporter kaocha.report/documentation
+}

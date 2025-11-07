@@ -1,0 +1,21 @@
+# Clojure
+.cpcache/
+.nrepl-port
+.rebel_readline_history
+target/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.lsp/
+.clj-kondo/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.jar
+*.class
+pom.xml.asc

@@ -1,0 +1,138 @@
+name: Release to Clojars
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Specific version to release (e.g., 1.0.1) - leave empty to auto-bump'
+        required: false
+        type: string
+      bump:
+        description: 'Version bump type (used only if version is empty)'
+        required: true
+        type: choice
+        default: 'bugfix'
+        options:
+          - bugfix
+          - minor
+          - major
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install mise
+        uses: jdx/mise-action@v2
+
+      - name: Cache Clojure dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.gitlibs
+            .cpcache
+          key: ${{ runner.os }}-clojure-${{ hashFiles('**/deps.edn') }}
+          restore-keys: |
+            ${{ runner.os }}-clojure-
+
+      - name: Install cljfmt
+        run: clojure -Ttools install io.github.weavejester/cljfmt '{:git/tag "0.15.3"}' :as cljfmt
+
+      - name: Check formatting
+        run: clojure -Tcljfmt check
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            NEW_VERSION="${{ inputs.version }}"
+          else
+            # Extract current version from deps.edn
+            CURRENT_VERSION=$(grep ':mvn/version' deps.edn | sed -E 's/.*:mvn\/version "([0-9]+\.[0-9]+\.[0-9]+)".*/\1/')
+
+            # Parse version components
+            MAJOR=$(echo $CURRENT_VERSION | cut -d. -f1)
+            MINOR=$(echo $CURRENT_VERSION | cut -d. -f2)
+            BUGFIX=$(echo $CURRENT_VERSION | cut -d. -f3)
+
+            # Bump based on input
+            case "${{ inputs.bump }}" in
+              major)
+                MAJOR=$((MAJOR + 1))
+                MINOR=0
+                BUGFIX=0
+                ;;
+              minor)
+                MINOR=$((MINOR + 1))
+                BUGFIX=0
+                ;;
+              bugfix)
+                BUGFIX=$((BUGFIX + 1))
+                ;;
+            esac
+
+            NEW_VERSION="${MAJOR}.${MINOR}.${BUGFIX}"
+          fi
+
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "Releasing version: $NEW_VERSION"
+
+      - name: Update version in deps.edn
+        run: |
+          sed -i ':a;N;$!ba;s/\(.*\):mvn\/version ".*"/\1:mvn\/version "${{ steps.version.outputs.new_version }}"/' deps.edn
+
+      - name: Commit version bump
+        run: |
+          git add deps.edn
+          git commit -m "Bump version to ${{ steps.version.outputs.new_version }}"
+          git tag "v${{ steps.version.outputs.new_version }}"
+
+
+
+      - name: Run tests
+        run: mise run test
+
+      - name: Setup Maven settings.xml
+        run: |
+          mkdir -p ~/.m2
+          cat > ~/.m2/settings.xml << EOF
+          <settings>
+            <servers>
+              <server>
+                <id>clojars</id>
+                <username>${{ secrets.CLOJARS_USERNAME }}</username>
+                <password>${{ secrets.CLOJARS_PASSWORD }}</password>
+              </server>
+            </servers>
+          </settings>
+          EOF
+
+      - name: Deploy to Clojars
+        run: mise run deploy
+
+      - name: Push changes
+        run: |
+          git push origin master
+          git push origin "v${{ steps.version.outputs.new_version }}"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.new_version }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <!-- Enable DEBUG or TRACE for credential chain -->
+        <Logger name="software.amazon.awssdk.auth.credentials" level="debug"/>
+        <!-- Or use TRACE for even more detail -->
+        <!-- <Logger name="software.amazon.awssdk.auth.credentials" level="trace"/> -->
+
+        <!-- Optional: See HTTP requests (useful if using EC2 IMDS) -->
+        <Logger name="software.amazon.awssdk.request" level="debug"/>
+
+        <Root level="warn">
+            <AppenderRef ref="Console"/>
+        </Root>
+    </Loggers>
+</Configuration>

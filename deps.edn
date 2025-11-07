@@ -1,0 +1,25 @@
+
+{:paths ["src" "test"]
+ :deps {com.cognitect.aws/api {:mvn/version "0.8.774"}
+        org.clojure/clojure {:mvn/version "1.11.4"}
+        software.amazon.awssdk/auth {:mvn/version "2.37.5"}
+        software.amazon.awssdk/sso {:mvn/version "2.37.5"}
+        software.amazon.awssdk/ssooidc {:mvn/version "2.37.5"}
+        software.amazon.awssdk/eksauth {:mvn/version "2.37.5"}}
+
+ :aliases {:test {:extra-deps  {lambdaisland/kaocha                        {:mvn/version "1.91.1392"}
+                                nubank/matcher-combinators                 {:mvn/version "3.9.2"}
+                                com.cognitect.aws/endpoints                {:mvn/version "871.2.35.6"}
+                                com.cognitect.aws/s3                       {:mvn/version "871.2.33.5"}
+                                com.cognitect.aws/sts                      {:mvn/version "871.2.32.2"}
+                                org.slf4j/slf4j-api                        {:mvn/version "2.0.17"}
+                                org.apache.logging.log4j/log4j-slf4j2-impl {:mvn/version "2.25.2"}
+                                org.apache.logging.log4j/log4j-core        {:mvn/version "2.25.2"}}
+                  :extra-paths ["integration-test"]
+                  :exec-fn     kaocha.runner/exec-fn}
+           :build {:deps {io.github.clojure/tools.build {:git/tag "v0.10.11" :git/sha "c6c670a"}}
+                   :ns-default build}}
+ :mvn/repos {"clojars" {:url "https://repo.clojars.org/"}}
+ :mvn/group-id "io.github.michalmela"
+ :mvn/artifact-id "cogni-java-credentials"
+ :mvn/version "0.0.0"}
